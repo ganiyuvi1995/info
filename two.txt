@@ -1,0 +1,39 @@
+#!/usr/bin/python2
+import subprocess as sub
+import platform as pla
+#Operting System Version
+os_version = pla.linux_distribution()[1][0]
+#current kernel version
+c_k_version = pla.release()
+# TO listout available kernel versions
+k_cmd = ('rpm','-qa','kernel')
+#To remove unused kernel versions
+def remove_kernel(arg):
+    rm_cmd = ('yum','remove','-y',arg)
+    exe= sub.Popen(rm_cmd,stderr=sub.STDOUT,stdout=sub.PIPE)
+    r_exe = exe.communicate()[0], exe.returncode
+    if r_exe[-1] == 0:
+        print('Removing the unused kernel: {}'.format(arg))
+        #print(r_exe[:-1])
+    else:
+        print('Kernel is not removed {}'.format(arg))
+        #print(r_exe[:-1])
+#
+def main():
+    k=sub.Popen(k_cmd,stdout=sub.PIPE,stderr=sub.STDOUT).communicate()[0]
+    kernel_list = list(filter(None,k.replace('kernel-','').split('\n')))
+    if int(os_version) == 7:
+        if len(kernel_list) >= 2:
+            for i in range(0,len(kernel_list)):
+                if c_k_version != kernel_list[i]:
+                    arg = ('kernel-{}'.format(kernel_list[i]))
+                    remove_kernel(arg)
+                else:
+                    print('Skipping The current kernel {}'.format(kernel_list[i]))
+        else:
+            print('Currently This host have only one kernel, kernel count: {}'.format(len(kernel_list)))
+    else:
+        print('This is not an Redhat version 7')
+
+if __name__ == '__main__':
+    main()
